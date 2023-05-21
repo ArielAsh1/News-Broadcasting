@@ -5,13 +5,22 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include <string.h>
+#include "boundedbuffer.h"
 #include "linkedlist.h"
+
+#define SPORTS  (0)
+#define NEWS    (1)
+#define WEATHER (2)
 
 #define FALSE (0)
 #define TRUE  (1)
 
-#define ERROR           (-1)
-#define MAX_LINE_LENGTH (100)
+#define ERROR (-1)
+
+#define MAX_LINE_LENGTH  (100)
+#define MAX_PRINT_LENGTH (250)
 
 typedef struct {
     int id;
@@ -19,8 +28,26 @@ typedef struct {
     int queueSize;
 } Producer;
 
-// TODO: can we assume that the file is valid?
-// TODO: can we assume that lines don't contain unnecessary spaces?
+typedef struct {
+    int id;
+    int numberOfProducts;
+    BoundedBuffer *boundedBuffer;
+} ProducerFunctionParams;
+
+LinkedList *producerBuffers;
+BoundedBuffer *sportsEditorBuffer;
+BoundedBuffer *newsEditorBuffer;
+BoundedBuffer *weatherEditorBuffer;
+BoundedBuffer *screenManagerBuffer;
+
+// TODO:
+//  dispatcher
+//  main (create threads/buffers and destroy/free)
+//  unboundedbuffer (using semaphores/mutex)
+//  boundedbuffer (using unbounded and semaphores/mutex)
+
+// QTODO: can we assume that the file is valid?
+// QTODO: can we assume that lines don't contain unnecessary spaces?
 
 // for testing
 void listPrint(LinkedList *list) {
@@ -56,6 +83,71 @@ void listTest() {
     listPrint(list);
     listFree(list);
     exit(0);
+}
+
+void producerFunction(ProducerFunctionParams *params) {
+    int sportsCounter = 0;
+    int newsCounter = 0;
+    int weatherCounter = 0;
+
+    for (int i = 0; i < params->numberOfProducts; i++) {
+        int type = rand() % 3;
+        char *typeStr;
+        int typeCount;
+        switch (type) {
+            case SPORTS:
+                typeStr = "SPORTS";
+                typeCount = sportsCounter++;
+                break;
+            case NEWS:
+                typeStr = "NEWS";
+                typeCount = newsCounter++;
+                break;
+            case WEATHER:
+                typeStr = "WEATHER";
+                typeCount = weatherCounter++;
+                break;
+        }
+
+        char *print = malloc(sizeof(char) * MAX_PRINT_LENGTH);
+        sprintf(print, "Producer %d %s %d", params->id, typeStr, typeCount);
+        boundedBufferAdd(params->boundedBuffer, print);
+    }
+
+    char *doneBuffer = malloc(sizeof(char) * (strlen("DONE") + 1));
+    strcpy(doneBuffer, "DONE");
+    boundedBufferAdd(params->boundedBuffer, doneBuffer);
+}
+
+void dispatcherFunction(void) {
+
+}
+
+void screenManagerFunction(void) {
+    int coEditorsCount = 3;
+    while (coEditorsCount > 0) {
+        char *str = boundedBufferRemove(screenManagerBuffer);
+        if (strcmp(str, "DONE") == 0) {
+            coEditorsCount--;
+        } else {
+            printf("%s\n", str);
+        }
+        free(str);
+    }
+    printf("DONE\n");
+}
+
+void coEditorFunction(BoundedBuffer *boundedBuffer) {
+    int receivedDone = FALSE;
+    while (!receivedDone) {
+        sleep(0.1);
+
+        char *str = boundedBufferRemove(boundedBuffer);
+        if (strcmp(str, "DONE") == 0) {
+            receivedDone = TRUE;
+        }
+        boundedBufferAdd(screenManagerBuffer, str);
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -110,7 +202,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    
+    pthread_t producerThreads[producers->size];
+    for (int i = 0; i < producers->size; i++) {
+        pthread_create(&producerThreads[i], NULL, (void *(*)(void *))producerFunction, NULL);
+    }
+
+    // after this loop all the threads finished running and can be freed
+    for (int i = 0; i < producers->size; i++) {
+        pthread_join(producerThreads[i], NULL);
+    }
 
     listFree(producers);
     return 0;

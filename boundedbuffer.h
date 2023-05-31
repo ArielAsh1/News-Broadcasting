@@ -1,11 +1,12 @@
 #ifndef BOUNDEDBUFFER_H
 #define BOUNDEDBUFFER_H
 
-#include "linkedlist.h"
+#include "unboundedbuffer.h"
+#include <semaphore.h>
 
 typedef struct {
-    LinkedList *list;
-    int size;
+    UnboundedBuffer *buffer;
+    sem_t semFull;
 } BoundedBuffer;
 
 BoundedBuffer *boundedBufferCreate(int size);

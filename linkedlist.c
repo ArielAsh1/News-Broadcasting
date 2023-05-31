@@ -51,29 +51,51 @@ void listAddHead(LinkedList *list, void *data) {
     list->size++;
 }
 
+void listAddLast(LinkedList *list, void *data) {
+    ListNode *newNode = listNodeCreate(data);
+    if (listIsEmpty(list)) {
+        list->head = list->last = newNode;
+    } else {
+        list->last->next = newNode;
+    }
+
+    list->size++;
+}
+
 void *listRemoveLast(LinkedList *list) {
+    return listRemoveNode(list, list->last);
+}
+
+void *listRemoveNode(LinkedList *list, ListNode *node) {
     // list is empty
-    if (list->last == NULL) {
+    if (listIsEmpty(list)) {
         return NULL;
     }
 
-    ListNode *lastNode = list->last;
-    void *lastNodeData = lastNode->data;
+    void *nodeData = node->data;
 
-    if (list->head == list->last) {
+    if (list->size == 1) {
         // list has only one node
         list->head = list->last = NULL;
+    } else if (list->head == node) {
+        list->head = list->head->next;
     } else {
         // list has more than one node
-        ListNode *beforeLast = list->head;
-        while (beforeLast->next != list->last) {
-            beforeLast = beforeLast->next;
+        ListNode *beforeNode = list->head;
+        while (beforeNode->next != node) {
+            beforeNode = beforeNode->next;
         }
-        list->last = beforeLast;
-        beforeLast->next = NULL;
+        beforeNode->next = node->next;
+        if (beforeNode->next == NULL) {
+            list->last = beforeNode;
+        }
     }
 
-    free(lastNode);
+    free(node);
     list->size--;
-    return lastNodeData;
+    return nodeData;
+}
+
+int listIsEmpty(LinkedList *list) {
+    return list->size == 0;
 }

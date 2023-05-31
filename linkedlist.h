@@ -19,6 +19,10 @@ LinkedList *listCreate(void);
 void listFree(LinkedList *list);
 
 void listAddHead(LinkedList *list, void *data);
+void listAddLast(LinkedList *list, void *data);
 void *listRemoveLast(LinkedList *list);
+
+void *listRemoveNode(LinkedList *list, ListNode *node);
+int listIsEmpty(LinkedList *list);
 
 #endif

@@ -3,23 +3,31 @@
 
 BoundedBuffer *boundedBufferCreate(int size) {
     BoundedBuffer *newBoundedBuffer = malloc(sizeof(BoundedBuffer));
-    if (newBoundedBuffer == NULL) {
+    if (newBoundedBuffer  == NULL) {
         return NULL;
     }
-    newBoundedBuffer->size = size;
-    newBoundedBuffer->list = listCreate();
+    newBoundedBuffer ->buffer = unboundedBufferCreate();
+    if (newBoundedBuffer ->buffer == NULL) {
+        free(newBoundedBuffer );
+        return NULL;
+    }
+    sem_init(&newBoundedBuffer ->semFull, 0, size);
     return newBoundedBuffer;
 }
 
 void boundedBufferFree(BoundedBuffer *boundedBuffer) {
-    listFree(boundedBuffer->list);
+    sem_destroy(&boundedBuffer->semFull);
+    free(boundedBuffer->buffer);
     free(boundedBuffer);
 }
 
 void boundedBufferAdd(BoundedBuffer *boundedBuffer, char *s) {
-    listAddHead(boundedBuffer->list, s);
+    sem_wait(&boundedBuffer->semFull);
+    unboundedBufferAdd(boundedBuffer->buffer, s);
 }
 
 char *boundedBufferRemove(BoundedBuffer *boundedBuffer) {
-    return listRemoveLast(boundedBuffer->list);
+    char *value = unboundedBufferRemove(boundedBuffer->buffer);
+    sem_post(&boundedBuffer->semFull);
+    return value;
 }

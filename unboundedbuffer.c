@@ -21,7 +21,7 @@ void unboundedBufferFree(UnboundedBuffer *unboundedBuffer) {
 
 void unboundedBufferAdd(UnboundedBuffer *unboundedBuffer, char *s) {
     pthread_mutex_lock(&unboundedBuffer->mutex);
-    listAddLast(unboundedBuffer->list, s);
+    listAddHead(unboundedBuffer->list, s);
     pthread_mutex_unlock(&unboundedBuffer->mutex);
     sem_post(&unboundedBuffer->semEmpty);
 }
@@ -32,4 +32,10 @@ char *unboundedBufferRemove(UnboundedBuffer *unboundedBuffer) {
     char *value = listRemoveLast(unboundedBuffer->list);
     pthread_mutex_unlock(&unboundedBuffer->mutex);
     return value;
+}
+
+void unboundedBufferPrint(UnboundedBuffer *unboundedBuffer) {
+    pthread_mutex_lock(&unboundedBuffer->mutex);
+    listPrint(unboundedBuffer->list);
+    pthread_mutex_unlock(&unboundedBuffer->mutex);
 }

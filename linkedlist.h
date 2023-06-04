@@ -17,6 +17,7 @@ typedef struct {
 
 LinkedList *listCreate(void);
 void listFree(LinkedList *list);
+void listPrint(LinkedList *list);
 
 void listAddHead(LinkedList *list, void *data);
 void listAddLast(LinkedList *list, void *data);

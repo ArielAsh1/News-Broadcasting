@@ -12,6 +12,7 @@ typedef struct {
 } UnboundedBuffer;
 
 UnboundedBuffer *unboundedBufferCreate();
+void unboundedBufferPrint(UnboundedBuffer *unboundedBuffer);
 void unboundedBufferFree(UnboundedBuffer *unboundedBuffer);
 void unboundedBufferAdd(UnboundedBuffer *unboundedBuffer, char *s);
 char *unboundedBufferRemove(UnboundedBuffer *unboundedBuffer);

@@ -17,7 +17,7 @@ BoundedBuffer *boundedBufferCreate(int size) {
 
 void boundedBufferFree(BoundedBuffer *boundedBuffer) {
     sem_destroy(&boundedBuffer->semFull);
-    free(boundedBuffer->buffer);
+    unboundedBufferFree(boundedBuffer->buffer);
     free(boundedBuffer);
 }
 
@@ -30,4 +30,8 @@ char *boundedBufferRemove(BoundedBuffer *boundedBuffer) {
     char *value = unboundedBufferRemove(boundedBuffer->buffer);
     sem_post(&boundedBuffer->semFull);
     return value;
+}
+
+void boundedBufferPrint(BoundedBuffer *buffer) {
+    unboundedBufferPrint(buffer->buffer);
 }

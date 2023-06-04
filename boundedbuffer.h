@@ -10,6 +10,7 @@ typedef struct {
 } BoundedBuffer;
 
 BoundedBuffer *boundedBufferCreate(int size);
+void boundedBufferPrint(BoundedBuffer *buffer);
 void boundedBufferFree(BoundedBuffer *boundedBuffer);
 void boundedBufferAdd(BoundedBuffer *boundedBuffer, char *s);
 char *boundedBufferRemove(BoundedBuffer *boundedBuffer);

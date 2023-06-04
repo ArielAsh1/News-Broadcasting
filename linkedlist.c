@@ -57,6 +57,7 @@ void listAddLast(LinkedList *list, void *data) {
         list->head = list->last = newNode;
     } else {
         list->last->next = newNode;
+        list->last = newNode;
     }
 
     list->size++;
@@ -98,4 +99,15 @@ void *listRemoveNode(LinkedList *list, ListNode *node) {
 
 int listIsEmpty(LinkedList *list) {
     return list->size == 0;
+}
+
+void listPrint(LinkedList *list) {
+    printf("LIST: %d\n", list->size);
+    int index = 0;
+    ListNode *curr = list->head;
+    while (curr != NULL) {
+        printf("\t%d. %s\n", index, curr->data);
+        curr = curr->next;
+        index++;
+    }
 }

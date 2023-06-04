@@ -42,15 +42,6 @@ BoundedBuffer *newsEditorBuffer;
 BoundedBuffer *weatherEditorBuffer;
 UnboundedBuffer *screenManagerBuffer;
 
-// TODO:
-//  dispatcher
-//  main (create threads/buffers and destroy/free)
-//  unboundedbuffer (using semaphores/mutex)
-//  boundedbuffer (using unbounded and semaphores/mutex)
-
-// QTODO: can we assume that the file is valid?
-// QTODO: can we assume that lines don't contain unnecessary spaces?
-
 void producerFunction(ProducerFunctionParams *params) {
     int sportsCounter = 0;
     int newsCounter = 0;
@@ -91,15 +82,16 @@ void dispatcherFunction(void) {
             char *value = boundedBufferRemove(producerBuffer);
             if (strcmp("DONE", value) == 0) {
                 ListNode *nextNode = node->next;
+                boundedBufferFree(producerBuffer);
                 listRemoveNode(producerBuffers, node);
                 free(value);
                 node = nextNode;
             } else {
-                if (strstr("SPORTS", value) != NULL) {
+                if (strstr(value, "SPORTS") != NULL) {
                     boundedBufferAdd(sportsEditorBuffer, value);
-                } else if (strstr("NEWS", value) != NULL) {
+                } else if (strstr(value, "NEWS") != NULL) {
                     boundedBufferAdd(newsEditorBuffer, value);
-                } else if (strstr("WEATHER", value) != NULL) {
+                } else if (strstr(value, "WEATHER") != NULL) {
                     boundedBufferAdd(weatherEditorBuffer, value);
                 }
                 node = node->next;
@@ -182,7 +174,7 @@ int readConf(LinkedList *producers, int *coEditorQueueSize, char *filePath) {
             producer->id = lines[0];
             producer->numberOfProducts = lines[1];
             producer->queueSize = lines[2];
-            listAddHead(producers, producer);
+            listAddLast(producers, producer);
         } else if (linesRead == 1) {
             *coEditorQueueSize = lines[0];
         }
@@ -211,6 +203,22 @@ int main(int argc, char *argv[]) {
     weatherEditorBuffer = boundedBufferCreate(coEditorQueueSize);
     if (weatherEditorBuffer == NULL) return ERROR;
 
+    producerBuffers = listCreate();
+    ListNode *producerConf = producers->head;
+    ProducerFunctionParams producerParams[producers->size];
+    pthread_t producerThreads[producers->size];
+    for (int i = 0; i < producers->size; i++) {
+        Producer *producer = producerConf->data;
+        producerParams[i].id = producer->id;
+        producerParams[i].numberOfProducts = producer->numberOfProducts;
+        BoundedBuffer *buffer = boundedBufferCreate(producer->queueSize);
+        producerParams[i].boundedBuffer = buffer;
+        listAddLast(producerBuffers, buffer);
+        pthread_create(&producerThreads[i], NULL, (void *(*)(void *))producerFunction, &producerParams[i]);
+
+        producerConf = producerConf->next;
+    }   
+    
     pthread_t screenThread, dispatcherThread;
     pthread_create(&screenThread, NULL, (void *(*)(void *))screenManagerFunction, NULL);
     pthread_create(&dispatcherThread, NULL, (void *(*)(void *))dispatcherFunction, NULL);
@@ -220,23 +228,6 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 3; i++) {
         pthread_create(&coEditorThreads[i], NULL, (void *(*)(void *))coEditorFunction, coEditorBuffers[i]);
     }
-
-    producerBuffers = listCreate();
-    ListNode *producerConf = producers->head;
-    ProducerFunctionParams producerParams[producers->size];
-    pthread_t producerThreads[producers->size];
-    for (int i = 0; i < producers->size; i++) {
-    // int id;
-    // int numberOfProducts;
-    // BoundedBuffer *boundedBuffer;
-        Producer *producer = producerConf->data;
-        producerParams[i].id = producer->id;
-        producerParams[i].numberOfProducts = producer->numberOfProducts;
-        BoundedBuffer *buffer = boundedBufferCreate(producer->queueSize);
-        producerParams[i].boundedBuffer = buffer;
-        listAddLast(producerBuffers, buffer);
-        pthread_create(&producerThreads[i], NULL, (void *(*)(void *))producerFunction, &producerParams[i]);
-    }   
 
     // after this loop all the threads finished running and can be freed
     for (int i = 0; i < producers->size; i++) {
@@ -254,6 +245,11 @@ int main(int argc, char *argv[]) {
     boundedBufferFree(newsEditorBuffer);
     boundedBufferFree(weatherEditorBuffer);
     unboundedBufferFree(screenManagerBuffer);
+    ListNode *producerBuffer = producerBuffers->head;
+    while (producerBuffer != NULL) {
+        boundedBufferFree((BoundedBuffer *)producerBuffer->data);
+        producerBuffer = producerBuffer->next;
+    }
     listFree(producerBuffers);
     listFree(producers);
 

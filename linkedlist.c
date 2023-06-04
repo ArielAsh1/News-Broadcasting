@@ -37,7 +37,6 @@ ListNode *listNodeCreate(void *data) {
     if (newNode == NULL) {
         return NULL;
     }
-
     newNode->data = data;
     newNode->next = NULL;
     

@@ -1,7 +1,7 @@
 # Concurrent Programming and Synchronization Mechanisms in C
 
 This repository hosts an assignment project which implements concurrent programming and synchronization mechanisms in C. The project simulates a news broadcasting scenario where different types of stories are produced, sorted and displayed to the public.
-![image](https://github.com/ArielAsh1/News-Broadcasting/assets/112930532/e150ce3b-093b-4fbf-b968-c942c19da56e)
+<img src="https://github.com/ArielAsh1/News-Broadcasting/assets/112930532/e150ce3b-093b-4fbf-b968-c942c19da56e" width="400">
 
 ## Scenario
 We simulate different types of 'news stories' using simple strings which are displayed to the screen in the order they arrive. There are four types of active actors in this simulation:

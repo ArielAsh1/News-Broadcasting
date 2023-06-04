@@ -25,10 +25,3 @@ The Screen-manager displays the strings it receives via the Co-Editors queue to 
 
 #### System Design
 Three producers communicate with the dispatcher via their Producer queues. The Dispatcher communicates with the Co-Editors via three queues corresponding to the three types of messages. The Co-Editors communicate with the Screen-Manager via a single shared queue, and the Screen manager displays the system's output.
-
-## Bounded Buffer
-This project implements a thread-safe bounded buffer that supports the following operations:
-
-* Bounded_Buffer (int size) – create a new bounded buffer with size places to store objects.
-* void insert (char * s) – insert a new object into the bounded buffer. 
-* char * remove ( ) - Remove the first object from the bounded buffer and return it to the user.

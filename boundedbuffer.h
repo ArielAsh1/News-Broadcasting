@@ -1,3 +1,4 @@
+
 #ifndef BOUNDEDBUFFER_H
 #define BOUNDEDBUFFER_H
 
